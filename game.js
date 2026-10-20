@@ -132,6 +132,38 @@
     win: function () { beep([523, 659, 784, 1047], 0.18, 0.12); }
   };
 
+  /* ---------- 音频解锁（iOS / 移动端） ----------
+     iOS Safari 与高版本 Android 都要求音频由一次真实用户手势启动：
+     ① AudioContext 不在手势里创建/恢复，会一直停在 suspended —— 一点声音都没有
+     ② speechSynthesis 的第一次 speak 必须在手势里，否则被系统静默丢弃
+     所以第一次触摸/按键就预热一次，而不是等第一个字母判定时才临时创建 */
+  var audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { /* 没有音频输出设备时忽略 */ }
+    try {
+      if ('speechSynthesis' in window) {
+        if (typeof speechSynthesis.getVoices === 'function') speechSynthesis.getVoices();
+        var warm = new SpeechSynthesisUtterance(' ');
+        warm.volume = 0;
+        warm.lang = 'en-US';
+        speechSynthesis.speak(warm);   /* 静音一条，把语音通道打通 */
+      }
+    } catch (e) { /* 忽略 */ }
+  }
+  /* 声音被系统挡住时给一句人话，而不是让孩子以为游戏坏了 */
+  function warnIfSilent() {
+    setTimeout(function () {
+      if (audioCtx && audioCtx.state !== 'running') {
+        showToast('声音被系统拦住了：iPhone 请把侧边静音拨片推上去、调大音量，再点一下屏幕', 6000);
+      }
+    }, 400);
+  }
+
   /* ---------- 发音（Web Speech API） ---------- */
   var lastSpoken = '';
   var lastSpokenAt = 0;
@@ -144,7 +176,8 @@
     lastSpoken = ch;
     lastSpokenAt = now;
     try {
-      speechSynthesis.cancel();
+      /* iOS 上 cancel() 紧跟 speak() 会把这次发音吞掉，只在真的在说话时才取消 */
+      if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(ch);
       u.lang = /[\u4e00-\u9fa5]/.test(ch) ? 'zh-CN' : 'en-US';
       u.rate = 0.8;
@@ -1285,6 +1318,11 @@
       store.settings.sound = !store.settings.sound;
       saveStore();
       syncSoundBtn();
+      if (store.settings.sound) {
+        unlockAudio();          /* 这一下点击本身就是手势，正好用来解锁 */
+        SOUND.correct();        /* 给一声确认：开了就该听见 */
+        warnIfSilent();
+      }
     });
     $('btn-archive').addEventListener('click', function () {
       $('archive-summary').textContent = archiveSummary();
@@ -1320,6 +1358,10 @@
       else enableAutoArchive();
     });
     document.addEventListener('keydown', onKeyDown);
+    /* 捕获阶段预热音频：第一次点屏幕或按任意键就把声音通道打开 */
+    document.addEventListener('pointerdown', unlockAudio, true);
+    document.addEventListener('touchstart', unlockAudio, true);
+    document.addEventListener('keydown', unlockAudio, true);
     if (jumpBtn) jumpBtn.addEventListener('click', jumpToCurrent);
     window.addEventListener('scroll', updateJumpBtn, { passive: true });
     window.addEventListener('resize', updateJumpBtn);
