@@ -1,0 +1,16 @@
+# 本地工作数据（AI 助手的项目记忆与临时状态），不进仓库
+.workbuddy/
+
+# 视觉验收截图（每次跑测试都会重新生成，属于一次性产物）
+tests/*.png
+
+# 存档导出/自动存档产物
+progress.json
+*.autosave.json
+
+# Python / 系统杂项
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+desktop.ini
