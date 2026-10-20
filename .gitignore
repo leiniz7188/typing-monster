@@ -17,3 +17,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# 发布标记文件（WorkBuddy 内部用于追踪已发布应用）
+*.genie
