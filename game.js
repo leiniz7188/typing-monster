@@ -363,6 +363,23 @@
   }
 
   /* ---------- 虚拟键盘 ---------- */
+  /* 有触摸屏的设备（iPad / 平板 / 触屏本）才开放「点键作答」，
+     电脑上没有触摸屏时保持只认物理键盘——避免孩子拿鼠标乱点冒充打字 */
+  var touchTyping = (function () {
+    try {
+      if (window.matchMedia && window.matchMedia('(any-pointer: coarse)').matches) return true;
+    } catch (e) { /* 忽略：老浏览器没有 matchMedia 时走下一层判断 */ }
+    return 'ontouchstart' in window;
+  })();
+
+  function tapKey(code) {
+    if (!code) return;
+    var ch = code === 'space' ? ' ' : code;
+    if (IGNORE_KEYS.indexOf(ch) >= 0) return;   /* 退格 / 回车 / Shift 不参与判定 */
+    if (ch.length !== 1) return;
+    inputChar(ch);
+  }
+
   function renderKeyboard() {
     keyboardEl.innerHTML = '';
     KEY_ROWS.forEach(function (row) {
@@ -375,6 +392,13 @@
         keyEl.style.setProperty('--w', w);
         keyEl.dataset.key = code;
         keyEl.textContent = label;
+        if (touchTyping) {
+          /* pointerdown 比 click 快，且能阻止 iOS 的选中/放大手势 */
+          keyEl.addEventListener('pointerdown', function (ev) {
+            ev.preventDefault();
+            tapKey(this.dataset.key);
+          });
+        }
         rowEl.appendChild(keyEl);
       });
       keyboardEl.appendChild(rowEl);
@@ -588,13 +612,10 @@
     }
   }
 
-  function onKeyDown(e) {
+  /* 判定入口：物理键盘与触摸点按都走这里，规则完全一致 */
+  function inputChar(k) {
     if (state.screen !== 'game') return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    var k = (e.key || '').toLowerCase();
-    if (IGNORE_KEYS.indexOf(k) >= 0) return;
-    if (k.length !== 1) return;
-    e.preventDefault();
+    if (!k || k.length !== 1) return;
     var target = state.targets[state.tIdx].chars[state.cIdx];
     if (k === target) {
       var el = keyEl(target);
@@ -602,6 +623,16 @@
     } else {
       handleWrong(k);
     }
+  }
+
+  function onKeyDown(e) {
+    if (state.screen !== 'game') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = (e.key || '').toLowerCase();
+    if (IGNORE_KEYS.indexOf(k) >= 0) return;
+    if (k.length !== 1) return;
+    e.preventDefault();
+    inputChar(k);
   }
 
   /* ---------- 护眼 ---------- */

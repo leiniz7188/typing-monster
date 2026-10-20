@@ -474,6 +474,43 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check('偶数节点有下沉起伏', await page.locator('.level-card').nth(1).evaluate((el) => getComputedStyle(el).transform !== 'none'));
   check('虚线连接线存在', await page.locator('.level-card').nth(0).evaluate((el) => getComputedStyle(el, '::before').content !== 'none'));
 
+  /* ---------- T23 触摸设备：点虚拟键盘作答 ---------- */
+  console.log('\n[T23] 触摸设备点键作答 / 电脑端不放开');
+  const touchCtx = await browser.newContext({ viewport: { width: 1180, height: 820 }, hasTouch: true, isMobile: true });
+  const tp = await touchCtx.newPage();
+  tp.on('pageerror', (e) => { failed++; failures.push('触摸页 JS 错误: ' + e.message); });
+  await tp.goto(BASE);
+  await tp.evaluate((k) => localStorage.setItem(k, JSON.stringify({ progress: {}, growth: { celebrated: 3 }, settings: { sound: false, eyeMinutes: 15 } })), STORE_KEY);
+  await tp.reload();
+  await tp.waitForSelector('.level-card');
+  check('触摸设备被识别为 coarse 指针', await tp.evaluate(() => matchMedia('(any-pointer: coarse)').matches));
+  await tp.locator('.level-card:not([disabled])').first().tap();
+  await tp.waitForSelector('#target-letter:not(.hidden)');
+  const t23 = (await tp.locator('#target-letter').textContent()).trim().toLowerCase();
+  await tp.locator('.key[data-key="' + t23 + '"]').tap({ force: true });
+  await sleep(150);
+  const p23 = (await tp.locator('#game-progress').textContent()).trim();
+  check('点对虚拟键推进进度', /^1 \/ \d+$/.test(p23), p23);
+  const cur23 = (await tp.locator('#target-letter').textContent()).trim().toLowerCase();
+  await tp.locator('.key[data-key="' + (cur23 === 'q' ? 'w' : 'q') + '"]').tap({ force: true });
+  await sleep(150);
+  check('点错虚拟键目标不切换', (await tp.locator('#target-letter').textContent()).trim().toLowerCase() === cur23);
+  await touchCtx.close();
+
+  const deskCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const dp = await deskCtx.newPage();
+  await dp.goto(BASE);
+  await dp.evaluate((k) => localStorage.setItem(k, JSON.stringify({ progress: {}, growth: { celebrated: 3 }, settings: { sound: false, eyeMinutes: 15 } })), STORE_KEY);
+  await dp.reload();
+  await dp.waitForSelector('.level-card');
+  await dp.locator('.level-card:not([disabled])').first().click();
+  await dp.waitForSelector('#target-letter:not(.hidden)');
+  const t23b = (await dp.locator('#target-letter').textContent()).trim().toLowerCase();
+  await dp.locator('.key[data-key="' + t23b + '"]').click({ force: true });
+  await sleep(150);
+  check('电脑端鼠标点键不生效（防假练习）', /^0 \/ \d+$/.test((await dp.locator('#game-progress').textContent()).trim()), (await dp.locator('#game-progress').textContent()).trim());
+  await deskCtx.close();
+
   /* ---------- 结果 ---------- */
   await browser.close();
   console.log('\n========== 测试结果 ==========');

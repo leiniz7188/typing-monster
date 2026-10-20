@@ -33,7 +33,8 @@ typing-monster/
 
 - **方式四（iPad / 平板）：双击 `start-ipad.bat`**
   窗口里会打印一行 **「平板上玩：http://192.168.x.x:8321」**，在 iPad 的 Safari 地址栏输入它即可。
-  前提条件：① iPad 和电脑连**同一个 WiFi**；② **iPad 必须接实体键盘**（妙控键盘或蓝牙键盘）——这个游戏只认物理按键，触屏点虚拟键盘不会打字；③ 电脑不能关机/睡眠，关掉黑窗口服务就停了。
+  前提条件：① iPad 和电脑连**同一个 WiFi**；② 电脑不能关机/睡眠，关掉黑窗口服务就停了。
+  **触屏也能玩**：iPad / 平板上直接用手指点屏幕下方的虚拟键盘就能作答（2026-10-20 起支持）。接了实体键盘时两种方式都可用——但真想练指法，还是实体键盘更靠谱。
   首次启动 Windows 可能弹防火墙提示，勾选「专用 + 公用」再点允许；如果 iPad 打不开，用管理员命令补一条规则：
   `netsh advfirewall firewall add rule name="打字小怪兽" dir=in action=allow protocol=TCP localport=8321`
   注意：这种方式会把**整个项目文件夹**暴露给同一 WiFi 的设备（家里网络没问题，公共 WiFi 别用）。
@@ -93,4 +94,4 @@ NODE_PATH="C:/Users/chenm/.workbuddy/binaries/node/workspace/node_modules" \
 
 ## 技术栈
 
-原生 HTML/CSS/JS + Web Speech API（发音）+ Web Audio API（合成音效）+ localStorage（进度）。只认物理键盘，不做鼠标点虚拟键盘的假练习。
+原生 HTML/CSS/JS + Web Speech API（发音）+ Web Audio API（合成音效）+ localStorage（进度）。电脑上只认物理键盘（不做鼠标点虚拟键盘的假练习）；有触摸屏的设备（iPad / 平板）额外开放手指点键作答。

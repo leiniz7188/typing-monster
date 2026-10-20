@@ -30,7 +30,7 @@
 # 运行（日常）：双击 start.bat，访问 http://127.0.0.1:8321
 # 运行（iPad）：双击 start-ipad.bat，按窗口里打印的 http://<LAN IP>:8321 在 iPad Safari 打开
 #   ⚠️ start.bat 是 --bind 127.0.0.1，局域网设备访问不到；要跨设备必须用 start-ipad.bat
-#   ⚠️ iPad 必须接实体键盘：页面没有任何可聚焦输入框，没键盘时软键盘不会弹出，keydown 永不触发
+#   触摸设备（iPad/平板）可直接点虚拟键盘作答；电脑无触摸屏时仍只认物理键盘（见 §5 inputChar）
 # 测试（改动后必跑）：
 cd D:/claude-code/my-claude-project/typing-monster
 node --check game.js
@@ -55,6 +55,7 @@ NODE_PATH="C:/Users/chenm/.workbuddy/binaries/node/workspace/node_modules" \
 
 ## 5. game.js 关键函数地图
 
+- 输入入口：`inputChar(ch)` 是唯一判定入口——物理键盘走 `onKeyDown`，触摸设备走 `.key` 的 `pointerdown`（`touchTyping` 用 `(any-pointer: coarse)` 判定，电脑端不注册，防止鼠标点键冒充打字）
 - 关卡流：`buildQueue(level)`（三种模式：单键 `keys`+`count` / 单词 `words` / 汉字 `hanzi`）→ `startLevel(id)` → `renderTarget()` → `onKeyDown()` → `handleCorrect()/handleWrong()` → `finishLevel()`
 - 序列目标（阶段四五六）：`targets[]` 拆字符逐个击破，`cIdx` 定位当前字符，**目标内按错只重按当前字母，已按对的不清**
 - 语音：`speakLetter(ch, force)`，字母/单词 en-US、汉字 zh-CN；280ms 确认语音 + 700ms 预读语音，`force` 参数绕过节流（防「按 F 发音是 S」类 bug，别动这两段时序）

@@ -370,6 +370,15 @@ body {
   font-size: 15px;
   color: var(--ink-soft);
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+/* 触摸设备上点键要有按下去的手感 */
+.key:active {
+  transform: scale(0.94);
+  background: var(--pink-mist);
+  border-color: #F3CDDA;
 }
 .key.wide { font-size: 12px; }
 .key.home::after {
@@ -1099,3 +1108,16 @@ body {
 .heat-legend .hl.h-ok { background: var(--pink-light); }
 .heat-legend .hl.h-mid { background: var(--pink); }
 .heat-legend .hl.h-bad { background: var(--pink-deep); }
+
+
+/* ---------- 触摸设备（iPad / 平板）：键帽加大，手指点得准 ---------- */
+@media (pointer: coarse) {
+  .key {
+    height: 54px;
+    font-size: 17px;
+    border-radius: 11px;
+  }
+  .key.wide { font-size: 12.5px; }
+  .key.target { font-size: 21px; }
+  .key.home::after { width: 9px; height: 9px; bottom: 7px; }
+}
