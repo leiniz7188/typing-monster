@@ -4,6 +4,9 @@
 # 视觉验收截图（每次跑测试都会重新生成，属于一次性产物）
 tests/*.png
 
+# 发布目录（public/ 是给静态托管用的构建副本，源文件在根目录）
+public/
+
 # 存档导出/自动存档产物
 progress.json
 *.autosave.json
