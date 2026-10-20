@@ -59,6 +59,7 @@ NODE_PATH="C:/Users/chenm/.workbuddy/binaries/node/workspace/node_modules" \
 - 关卡流：`buildQueue(level)`（三种模式：单键 `keys`+`count` / 单词 `words` / 汉字 `hanzi`）→ `startLevel(id)` → `renderTarget()` → `onKeyDown()` → `handleCorrect()/handleWrong()` → `finishLevel()`
 - 序列目标（阶段四五六）：`targets[]` 拆字符逐个击破，`cIdx` 定位当前字符，**目标内按错只重按当前字母，已按对的不清**
 - 语音：`speakLetter(ch, force)`，字母/单词 en-US、汉字 zh-CN；280ms 确认语音 + 700ms 预读语音，`force` 参数绕过节流（防「按 F 发音是 S」类 bug，别动这两段时序）
+- 音频预热：`unlockAudio()` 挂在 pointerdown/touchstart/keydown 捕获阶段，第一次手势就建 `AudioContext` 并 resume + 发一条 `volume=0` 的静音 utterance。**别删**——iOS 上不在手势里创建音频会一直 suspended，首次 speak 也会被静默丢弃。`speakLetter` 里「只在 speaking/pending 时才 cancel」同样是 iOS 踩坑改的（cancel 紧跟 speak 会吞掉这次发音）
 - 界面渲染：`renderMenu()` / `renderStarsBadge()` / `renderGrowthBar()` / `renderSkinPicker()` / `renderStickerBook()` / `renderStats()` / `renderDailyGoal()`
 - 养成线：`growthStage(stars)` 四形态（0★宝宝/10★莓莓/25★星冠/45★星翼）→ `checkEvolution()` → `showEvolutionModal()`；皮肤 `SKINS` 数组按星数解锁
 - 存档：`saveStore()` 是唯一写入口，**任何状态变化都走它**，不要单独 localStorage.setItem
