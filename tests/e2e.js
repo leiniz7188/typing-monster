@@ -150,12 +150,38 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await page.waitForSelector('#screen-menu.active');
 
   /* ---------- T6 短句空格（阶段六） ---------- */
-  console.log('\n[T6] 短句模式 6-1');
+  console.log('\n[T6] 短句模式 6-1（含空格的句子必须能打完）');
   await page.locator('.level-card').nth(26).click(); // 6-1
   await page.waitForSelector('#target-word:not(.hidden)');
-  const w6 = await page.locator('#target-word').textContent();
-  check('句子含空格且空格可视化', /\s/.test(w6) && await page.locator('.wchar.space').count() >= 1);
-  check('空格键在虚拟键盘高亮', await page.locator('.key.target').count() === 1);
+  /* 用 offsetWidth/offsetHeight 量，避开入场动画 scale 的影响 */
+  const spBox = await page.locator('.wchar.space').first().evaluate((el) =>
+    ({ w: el.offsetWidth, h: el.offsetHeight }));
+  check('空格块可视化且有尺寸',
+    (await page.locator('.wchar.space').count()) >= 1 && spBox.w > 5 && spBox.h >= 4,
+    spBox.w + 'x' + spBox.h);
+  const w6 = await page.locator('#target-word .wchar').evaluateAll((els) =>
+    els.map((e) => (e.classList.contains('space') ? ' ' : e.textContent)));
+  check('读取到含空格的句子', w6.indexOf(' ') > 0, w6.join(''));
+
+  let spaceChecked = false;
+  for (let i = 0; i < w6.length; i++) {
+    if (w6[i] === ' ') {
+      const curSpace = await page.locator('.wchar.space.cur').count();
+      const keyOn = await page.locator('.key[data-key="space"].target').count();
+      const hint6 = (await page.locator('#finger-hint').textContent()).trim();
+      check('空格成当前字符时高亮空格键', curSpace === 1 && keyOn === 1, 'cur=' + curSpace + ' key=' + keyOn);
+      check('空格有手指提示', hint6.length > 0, hint6);
+      spaceChecked = true;
+      await page.keyboard.press('Space');
+    } else {
+      await page.keyboard.press(w6[i]);
+    }
+    await sleep(45);
+  }
+  await sleep(150);
+  const prog6 = (await page.locator('#game-progress').textContent()).trim();
+  check('按空格能推进，句子能打完', spaceChecked && /^1 \//.test(prog6), prog6);
+  check('打完一句后下一目标仍有键高亮', await page.locator('.key.target').count() === 1);
   await page.locator('#btn-quit').click();
   await page.waitForSelector('#screen-menu.active');
 

@@ -20,7 +20,7 @@
 | `start.bat` | — | 一键启动（起 http.server 8321 绑 127.0.0.1 + 开浏览器） | 低 |
 | `start-ipad.bat` | — | iPad/平板启动（跑 serve.py，绑 0.0.0.0 并打印局域网地址） | 低 |
 | `serve.py` | — | 局域网静态服务，启动时打印「平板上玩：http://<LAN IP>:8321」 | 低 |
-| `tests/e2e.js` | — | Playwright e2e，**116 项断言**，改完必须全过 | 中 |
+| `tests/e2e.js` | — | Playwright e2e，**124 项断言**，改完必须全过 | 中 |
 | `DESIGN.md` | — | 设计唯一真源 + 执行台账（每个功能/每个 bug/每条教训都在里面） | 每次改动追加 |
 | `AGENTS.md` | — | 本文件，项目现状交接 | 架构变化时更新 |
 
@@ -37,7 +37,7 @@ node --check game.js
 NODE_PATH="C:/Users/chenm/.workbuddy/binaries/node/workspace/node_modules" \
   "C:/Users/chenm/.workbuddy/binaries/node/versions/22.22.2-6/node.exe" tests/e2e.js
 ```
-要求：`node --check` 通过 + **116 项断言全过**。测试用真实 Chrome（`C:/Users/chenm/AppData/Local/ms-playwright/chromium-1223/chrome-win64/chrome.exe`）+ 真实键盘事件。
+要求：`node --check` 通过 + **124 项断言全过**。测试用真实 Chrome（`C:/Users/chenm/AppData/Local/ms-playwright/chromium-1223/chrome-win64/chrome.exe`）+ 真实键盘事件。
 测试盲区（需人体验证）：语音内容与发音时序、Web Audio 实际播放、自动存档写文件全流程、动画流畅度、三星速度标准松紧。
 
 ## 4. 数据结构（localStorage，改 store 结构必读）
@@ -55,7 +55,7 @@ NODE_PATH="C:/Users/chenm/.workbuddy/binaries/node/workspace/node_modules" \
 
 ## 5. game.js 关键函数地图
 
-- 输入入口：`inputChar(ch)` 是唯一判定入口——物理键盘走 `onKeyDown`，触摸设备走 `.key` 的 `pointerdown`（`touchTyping` 用 `(any-pointer: coarse)` 判定，电脑端不注册，防止鼠标点键冒充打字）
+- 输入入口：`inputChar(ch)` 是唯一判定入口——物理键盘走 `onKeyDown`，触摸设备走 `.key` 的 `pointerdown`（`touchTyping` 用 `(any-pointer: coarse)` 判定，电脑端不注册，防止鼠标点键冒充打字）。字符到键帽一律经 `charToCode(ch)` 映射（空格字符 `' '` ↔ 键帽 code `space`），`keyEl()` 找不到键帽时判定照常推进
 - 关卡流：`buildQueue(level)`（三种模式：单键 `keys`+`count` / 单词 `words` / 汉字 `hanzi`）→ `startLevel(id)` → `renderTarget()` → `onKeyDown()` → `handleCorrect()/handleWrong()` → `finishLevel()`
 - 序列目标（阶段四五六）：`targets[]` 拆字符逐个击破，`cIdx` 定位当前字符，**目标内按错只重按当前字母，已按对的不清**
 - 语音：`speakLetter(ch, force)`，字母/单词 en-US、汉字 zh-CN；280ms 确认语音 + 700ms 预读语音，`force` 参数绕过节流（防「按 F 发音是 S」类 bug，别动这两段时序）
@@ -101,6 +101,8 @@ NODE_PATH="C:/Users/chenm/.workbuddy/binaries/node/workspace/node_modules" \
 6. 手指提示气泡：`clearKeyMarks()` 既要移除 class 也要移除 DOM 子节点，否则堆积
 7. 活跃时长（每日目标）只统计按键间隔 ≤10s 的部分，防挂机；gapSum 单位是**秒**，别再除 1000
 8. 星级标准（昕主嫌高已放宽两轮，别再调高）：1★ 完成；2★ 准确率 ≥80%；3★ 准确率 ≥80% 且平均每目标 ≤6s（速度只算活跃输入间隔）
+9. **判定主逻辑不能挂在「UI 元素是否存在」上**——`inputChar` 曾写成 `if (el) handleCorrect(el)`，句子关的空格字符找不到键帽（键帽 code 是 `space`，字符是 `' '`），判定明明对了却整段被跳过：不推进、不计数、不发音，关卡卡死在 0/8。凡是「字符 → 键帽」的查找统一走 `charToCode(ch)`（`' ' → 'space'`），`keyEl()` 找不到就只丢反馈、状态照常推进
+10. **e2e 只测「渲染出来」不测「能不能推进」，等于没测玩法**——T6 原来只断言空格块存在，这个卡死 bug 一路绿灯。序列类关卡必须用真实键盘把整句打完（含空格），再断言进度推进
 
 ## 9. 待办 / 二期候选
 

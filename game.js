@@ -9,7 +9,8 @@
     q: '左手小指', w: '左手无名指', e: '左手中指', r: '左手食指', t: '左手食指',
     y: '右手食指', u: '右手食指', i: '右手中指', o: '右手无名指', p: '右手小指',
     z: '左手小指', x: '左手无名指', c: '左手中指', v: '左手食指', b: '左手食指',
-    n: '右手食指', m: '右手食指', ',': '右手中指', '.': '右手无名指', '/': '右手小指'
+    n: '右手食指', m: '右手食指', ',': '右手中指', '.': '右手无名指', '/': '右手小指',
+    ' ': '右手大拇指'
   };
 
   var KEY_ROWS = [
@@ -437,8 +438,18 @@
       keyboardEl.appendChild(rowEl);
     });
   }
+  /* 字符 → 虚拟键盘键帽 code：空格键在键帽上叫 space，其余字符与 code 一致。
+     句子关（阶段六）的目标里含空格字符，映射错就会找不到键帽——见 DESIGN.md。 */
+  function charToCode(ch) {
+    return ch === ' ' ? 'space' : ch;
+  }
   function keyEl(k) {
-    return keyboardEl.querySelector('.key[data-key="' + k + '"]');
+    var code = charToCode(k);
+    var all = keyboardEl.querySelectorAll('.key');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].dataset.key === code) return all[i];
+    }
+    return null;
   }
   function clearKeyMarks() {
     var all = keyboardEl.querySelectorAll('.key');
@@ -511,8 +522,13 @@
       s.className = 'wchar';
       if (i < state.cIdx) s.classList.add('done');
       if (i === state.cIdx) s.classList.add('cur');
-      if (t.chars[i] === ' ') s.classList.add('space');
-      s.textContent = t.chars[i];
+      if (t.chars[i] === ' ') {
+        /* 空格用一小段圆角块可视化（纯空格字符看不见，孩子不知道要按空格键） */
+        s.classList.add('space');
+        s.setAttribute('aria-label', '空格');
+      } else {
+        s.textContent = t.chars[i];
+      }
       targetWordEl.appendChild(s);
     }
   }
@@ -586,8 +602,11 @@
     var ch = t.chars[state.cIdx];
     recordHeat(ch, true);
 
-    el.classList.remove('target');
-    flashKey(el);
+    /* 键帽可能不存在（极少数目标字符不在虚拟键盘上），此时也必须推进，不能静默卡死 */
+    if (el) {
+      el.classList.remove('target');
+      flashKey(el);
+    }
     state.cIdx++;
 
     if (state.cIdx >= t.chars.length) {
@@ -651,8 +670,8 @@
     if (!k || k.length !== 1) return;
     var target = state.targets[state.tIdx].chars[state.cIdx];
     if (k === target) {
-      var el = keyEl(target);
-      if (el) handleCorrect(el);
+      /* 不依赖键帽是否存在：找不到键帽只是没有闪烁反馈，判定照常推进 */
+      handleCorrect(keyEl(target));
     } else {
       handleWrong(k);
     }
@@ -760,10 +779,12 @@
   }
 
   /* ---------- 键位热力图数据 ---------- */
+  /* 键位热力图按「键帽 code」存，空格记成 space（统计弹窗按 code 查表） */
   function recordHeat(k, ok) {
-    if (!store.heat[k]) store.heat[k] = { r: 0, w: 0 };
-    if (ok) store.heat[k].r++;
-    else store.heat[k].w++;
+    var code = charToCode(k);
+    if (!store.heat[code]) store.heat[code] = { r: 0, w: 0 };
+    if (ok) store.heat[code].r++;
+    else store.heat[code].w++;
   }
 
   /* ---------- 每日目标 ---------- */

@@ -319,8 +319,28 @@ body {
 .target-word .wchar { color: var(--ink-soft); }
 .target-word .wchar.done { color: var(--pink); }
 .target-word .wchar.cur { color: var(--pink-deep); border-bottom: 4px solid #FFB300; }
-.target-word .wchar.space { display: inline-block; min-width: 0.5em; }
-.target-word .wchar.space.cur { background: rgba(255, 179, 0, 0.2); }
+/* 句子关（阶段六）的空格：用一小段圆角块表示——纯空格字符看不见，
+   不给可见形状孩子根本不知道这里要按空格键 */
+.target-word .wchar.space {
+  display: inline-block;
+  width: 0.56em;
+  height: 7px;
+  margin: 0 0.08em;
+  border-radius: 4px;
+  background: #E8C2D2;
+  vertical-align: 0.30em;
+  border-bottom: none;
+}
+.target-word .wchar.space.cur {
+  background: #FFB300;
+  border-bottom: none;
+  animation: spacePulse 1s ease-in-out infinite;
+}
+.target-word .wchar.space.done {
+  background: var(--pink);
+  border-bottom: none;
+  animation: none;
+}
 .hz-label {
   font-size: 56px;
   font-weight: 600;
@@ -544,6 +564,10 @@ body {
 @keyframes floatUp {
   0% { opacity: 1; transform: translateX(-50%) translateY(0); }
   100% { opacity: 0; transform: translateX(-50%) translateY(-46px); }
+}
+@keyframes spacePulse {
+  0%, 100% { opacity: 1; transform: scaleX(1); }
+  50% { opacity: 0.55; transform: scaleX(0.84); }
 }
 
 /* 窄屏：工具坞整体换到第二行并居中，保证不重叠不溢出 */
