@@ -8,6 +8,8 @@ English | [中文](README.zh-CN.md)
 
 > Learn touch-typing the fun way — feed letters to a hungry little monster.
 
+![typing-monster screenshot](assets/screenshot.png)
+
 A zero-dependency, offline, single-file typing tutor for **total beginners** — primary / middle / high school students, adults picking up the keyboard, and seniors learning touch-typing. The pink monster "Mei Mei" is hungry — type the letter floating above her head correctly, she eats it, grows up, and earns new skins. No install, no build, no account, no internet required.
 
 ## ✨ Features
