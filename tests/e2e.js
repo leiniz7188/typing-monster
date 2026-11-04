@@ -8,7 +8,9 @@
 const { chromium } = require('playwright-core');
 
 const BASE = 'http://127.0.0.1:8321/index.html';
-const CHROME = 'C:/Users/chenm/AppData/Local/ms-playwright/chromium-1223/chrome-win64/chrome.exe';
+// Set CHROME_PATH env var to pin a specific Chrome build; otherwise let
+// playwright-core use the bundled chromium.
+const CHROME = process.env.CHROME_PATH || undefined;
 const STORE_KEY = 'typing-monster-progress-v1';
 
 let passed = 0, failed = 0;

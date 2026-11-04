@@ -1,118 +1,72 @@
-# typing-monster · 打字小怪兽
+# typing-monster
 
-给 8 岁零基础女孩的键盘启蒙游戏：小怪兽「莓莓」饿了，喂对它想吃的字母，它就长大。
+English | [中文](README.zh-CN.md)
 
-## 项目结构
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Any%20browser-blue)](#)
+[![Zero deps](https://img.shields.io/badge/deps-zero-brightgreen.svg)](#)
 
-```
-typing-monster/
-├── AGENTS.md       # 项目现状交接（接手/让其他模型优化前先读这个）
-├── DESIGN.md       # 设计方案（唯一真源，开发以此为准）
-├── README.md       # 本文件（使用者手册）
-├── index.html      # 页面结构（关卡地图 / 游戏 / 结算 / 护眼弹窗）
-├── style.css       # 粉色马卡龙女孩向风格 + 全部动画
-├── levels.js       # 关卡数据（六阶段 29 关，改数据即可加关调序）
-├── game.js         # 核心逻辑（键盘高亮 / 判定 / 发音 / 音效 / 星星 / 存档）
-├── start.bat       # 一键启动（双击：起服务 + 打开浏览器，推荐日常用）
-├── start-ipad.bat  # 家里 iPad 用（起服务并打印平板访问地址，需同一 WiFi）
-├── serve.py        # start-ipad.bat 背后的服务脚本（监听 0.0.0.0）
-└── tests/
-    └── e2e.js      # 端到端测试（Playwright + 真实 Chrome + 真实键盘事件，124 项断言）
-```
+> Teach your kid to touch-type by feeding letters to a hungry little monster.
 
-## 运行方式
+A zero-dependency, offline, single-file typing tutor for ages 5–8. The pink monster "Mei Mei" is hungry — type the letter floating above her head correctly, she eats it, grows up, and earns new skins. No install, no build, no account, no internet required.
 
-纯静态页面，零依赖、零构建、离线可玩。**下面几种方式，日常推荐方式一；固定用同一种**（存档按浏览器 + 打开地址隔离，换来换去进度不互通）：
+## ✨ Features
 
-- **方式一（推荐日常）：双击 `start.bat`**
-  自动起本地服务并打开浏览器，一个黑窗口就是服务（关掉窗口=停服务，存档不受影响）。
-  重启电脑后同样双击它即可，不需要记任何命令。以后想让孩子自己开机：把 `start.bat` 的快捷方式发送到桌面。
+- 🎯 **Structured 6-stage curriculum, 29 levels** — home row → top row → bottom row → English words → Pinyin/Chinese characters → short English sentences. The proven touch-type path, never dumps all 26 keys at once.
+- 🔊 **Speaks every letter / word out loud** — uses the browser's built-in Web Speech API; auto-switches between English (en-US) and Chinese (zh-CN). No audio files to ship.
+- 🎨 **Cutepink mascot with growth system** — inline SVG monster with 4 evolution forms (baby → berry → crowned → winged), 4 unlockable skins, random sticker-sticker surprises after levels.
+- 📊 **Parent dashboard** — progress per stage, star counts, practice heat-map showing which keys are hit wrong most often, daily goal tracking.
+- 🛡️ **Kid-friendly by design** — no game-over, no score loss, wrong keypress just wiggles the key. 15-minute eye-care break reminder. Daily goal (default 10 min) actively tells the kid "you're full, go play".
+- 💾 **Offline progress** — localStorage with auto-backup, export/import JSON, optional auto-save to a local folder (Chrome/Edge).
+- 📱 **Touch-friendly** — iPad / tablet users can tap the on-screen keyboard; desktop still requires a physical keyboard (no fake mouse-typing practice).
 
-- **方式二（最省事）：直接双击 `index.html`**
-  浏览器打开即玩。⚠️ 注意：`file://` 方式下「自动存档到文件夹」功能不可用（浏览器安全策略），其他功能正常。
+## Quick start
 
-- **方式三（iPad / 平板，同一 WiFi）：双击 `start-ipad.bat`**
-  窗口里会打印一行 **「平板上玩：http://192.168.x.x:8321」**，在 iPad 的 Safari 地址栏输入它即可。
-  前提条件：① iPad 和电脑连**同一个 WiFi**；② 电脑不能关机/睡眠，关掉黑窗口服务就停了。
-  **触屏也能玩**：iPad / 平板上直接用手指点屏幕下方的虚拟键盘就能作答（2026-10-20 起支持）。接了实体键盘时两种方式都可用——但真想练指法，还是实体键盘更靠谱。
-  首次启动 Windows 可能弹防火墙提示，勾选「专用 + 公用」再点允许；如果 iPad 打不开，用管理员命令补一条规则：
-  `netsh advfirewall firewall add rule name="打字小怪兽" dir=in action=allow protocol=TCP localport=8321`
-  注意：这种方式会把**整个项目文件**暴露给同一 WiFi 的设备（家里网络没问题，公共 WiFi 别用）。
+Just open `index.html` in any modern browser. That's it.
 
-- **方式四（手机 / 出门在外，不用开电脑）：直接打开线上版**
-  https://typing-monster.app.workbuddy.host/?sharecode=DNW4DOVJUL
-  链接自带分享码，不发出去别人打不开。iPad / iPhone 用 Safari 打开后「分享 → 添加到主屏幕」，桌面上就是个 App 图标。
-  ⚠️ 线上版和上面三种本地方式**存档互不相通**，是两套独立进度；换之前先用「导出存档 → 导入存档」搬一次。
-
-- **方式五（命令行）：手动起服务**
+### Optional: local server (recommended for iPad)
 
 ```bash
-cd D:/claude-code/my-claude-project/typing-monster
-"C:/Users/chenm/.workbuddy/binaries/python/versions/3.13.12/python.exe" -m http.server 8321 --bind 127.0.0.1
+# Windows: double-click start.bat
+# macOS / Linux:
+python3 -m http.server 8321
+# then open http://127.0.0.1:8321
 ```
 
-然后浏览器访问 `http://127.0.0.1:8321`（重启电脑后服务不会自动起，需重跑，或用方式一）
+To play on an iPad / tablet on the same Wi-Fi (Windows): double-click `start-ipad.bat`, then open the printed `http://<your-ip>:8321` on the tablet's Safari.
 
-## 没声音怎么办
+## Curriculum
 
-游戏的声音有两部分：按键音效（Web Audio 现场合成）+ 字母发音（Web Speech 朗读）。手机上没声音，按这个顺序查：
-
-| 顺序 | 检查什么 | 怎么处理 |
+| Stage | Content | Levels |
 |---|---|---|
-| 1 | **iPhone 侧边静音拨片** | 拨到不露橙色的一面。iOS 的网页音频跟着静音开关走，这是最常见的原因，代码绕不过去 |
-| 2 | **媒体音量** | 按音量上键调大（网页声音走媒体音量，不是铃声音量） |
-| 3 | 点右上「音效」关掉再打开 | 会立刻响一声做确认；如果系统仍在静音，页面底部会弹出提示 |
-| 4 | 安卓 Chrome 站点声音 | 地址栏左侧锁形图标 → 网站设置 → 声音：允许 |
+| 1 | Home row (A S D F J K L ;) | 8 |
+| 2 | Top row (Q W E R T Y U I O P) | 4 |
+| 3 | Bottom row (Z X C V B N M , . /) | 4 |
+| 4 | English words (cat / dog / sun …) | 5 |
+| 5 | Pinyin & Chinese characters | 5 |
+| 6 | Short English sentences | 3 |
 
-iOS 还有一条限制：`AudioContext` 必须由真实用户手势创建，`speechSynthesis` 的**首次**朗读也必须在手势里，否则会被系统静默丢弃。游戏已在第一次点屏幕 / 按键时就预热音频通道（`unlockAudio()`），所以正常流程不会再遇到。
+Each level has 6–20 targets, takes 2–3 minutes. Three stars per level: finish ⭐, ≥80% accuracy ⭐⭐, ≥80% and ≤6s per target ⭐⭐⭐.
 
-## 存档管理
+## Tech stack
 
-进度自动保存在浏览器本地（localStorage），重启浏览器不丢。防丢四层保险：
+Plain HTML / CSS / vanilla JS. No frameworks, no bundler, no npm install.
+- Speech: Web Speech API
+- Sound: Web Audio API (synthesized live, no audio files)
+- Progress: localStorage
+- Mascot: inline SVG (no image assets, no copyright risk)
 
-1. **自动备份**：每次存档同时写一份备份，主存档损坏时自动从备份恢复
-2. **自动存档到文件夹**（推荐开一次就忘掉）：地图页「💾 存档 → 开启自动存档」，授权一个文件夹（比如「文档/打字小怪兽存档」），每次过关自动把存档文件写进去。**浏览器缓存清光了文件也在**，事后用「导入存档」选它就能恢复。只保留最新的 5 份滚动副本，防文件本身损坏
-3. **导出存档**：「导出存档」按钮下载一个 json 文件，手动备份
-4. **导入存档**：换电脑、换浏览器、清了缓存后，选之前的 json 文件，星星和解锁全回来
-
-自动存档的限制：只有**桌面版** Chrome/Edge 且通过 `http://127.0.0.1:8321` 访问时可用（双击 file:// 打开、以及 iPad 上的 Safari 都不支持，界面会提示原因）。开启一次后记住授权，日常无感。
-
-**在 iPad 上玩要注意**：自动存档用不了，进度只存在 Safari 的 localStorage 里。iPad 的「清除历史记录与网站数据」会把它删掉，所以**每周在 iPad 上点一次「导出存档」**（会存进「文件」App），换设备时用「导入存档」恢复。另外 iPad 上的存档和电脑上的存档是**两份，互不相通**。
-
-会丢进度的两种情况（功能也救不了，只能预防）：浏览器开**无痕模式**玩（关掉即焚）、**手动删掉**自动存档文件夹里的文件。
-
-## 测试
+## Test
 
 ```bash
-# 端到端测试（需要本地服务先起着；Playwright 浏览器用系统缓存，无需下载）
-cd typing-monster
-NODE_PATH="C:/Users/chenm/.workbuddy/binaries/node/workspace/node_modules" \
-  "C:/Users/chenm/.workbuddy/binaries/node/versions/22.22.2-6/node.exe" tests/e2e.js
+# e2e tests need Playwright + a local server running
+node tests/e2e.js
 ```
 
-124 项断言，覆盖：地图渲染（6 阶段 29 卡/解锁态）、单键全流程（按错不切换目标/结算星级/准确率文案）、单词与汉字序列模式（目标内按错不清进度）、短句空格高亮、护眼锁定（弹窗期间按键不计分）、进度持久化（刷新后解锁保持）、combo 徽章、气泡堆积回归、存档管理（弹窗摘要/自动备份/主档损坏自动恢复并回写/导出下载/导入恢复/无效文件拒绝/自动存档 UI 状态）、每日目标（时长累计/关数统计/目标切换/文案刷新）、家长统计页（总览五项/阶段明细/热力图着色/目标设置）、皮肤系统（解锁判定/切换/落档/刷新保持/锁定提示）、旧存档兼容（无新字段的旧档正常载入）、首页星星积分徽章（总星数/通关进度/新玩家零值）、莓莓养成线（形态切换/进化解锁皮肤/庆祝弹窗/成长条/满级文案）、奇遇彩蛋（礼物掉落/开盒入档/防重复/图鉴统计与 have 格）、冒险路径（插旗/当前关高亮与出发按钮/节点起伏/虚线连接）。
+## Keywords
 
-**已知测试盲区**（自动测试覆盖不到，需人体验证）：
-- 语音内容与发音时序（无头 Chrome 无语音引擎）——「按 F 发音是 S」类问题只能人耳验
-- Web Audio 音效实际播放（无头环境静音）
-- 自动存档写文件全流程（无头环境弹不出系统目录选择器）——首次授权的交互、文件夹里文件的生成与滚动删除，要人点一次确认
-- 莓莓动画与皮肤换装的视觉流畅度、三星速度标准对孩子是松是紧
+typing game for kids, touch typing tutor, keyboard learning for children, typing practice, phonics typing, pinyin typing, kids educational game, offline typing game, html typing game, no-deps, 儿童打字游戏, 键盘启蒙, 打字练习, 拼音打字, 英语单词打字
 
-## 当前进度
+## License
 
-- **六阶段全量已上线（29 关）**：
-  - 阶段一 主键区（8 关）→ 阶段二 上排（4 关）→ 阶段三 下排（4 关）→ 阶段四 英文单词（5 关）→ 阶段五 拼音汉字（5 关）→ 阶段六 英文短句（3 关）
-- 已实现：目标键高亮+手指提示气泡、字母/单词/汉字自动发音（中英文语音自动切换）、正误音效、莓莓吃字母动画、连击、三星结算、完成即解锁下一关、15 分钟护眼提醒
-- 序列目标（单词/拼音/句子）：按对每个字符推进，**按错只需重按当前字母，已按对的不清空**
-- 拼音汉字模式：显示汉字大字+拼音提示，按对拼音序列完成一个汉字（中文打字本质是打拼音，选字交给系统输入法）
-- **每日目标**：地图页常驻今日进度条，默认 10 分钟/天（统计页里可调 5/10/15/20），达成后莓莓说"吃饱啦去玩吧"——主动劝停，防沉迷靠设计
-- **家长统计页**：地图页「📊 统计」——总览（通关/星数/练习天数/累计时长/今日）、六阶段进度明细、键位热力图（错得越多颜色越深 + 错得最多的键 Top5）
-- **皮肤系统**：莓莓/蓝莓/柠檬/葡萄四套皮肤，按累计星数 10/25/45 解锁，地图页一键换装
-- **触屏作答（2026-10-20）**：有触摸屏的设备（iPad / 平板 / 手机）可直接用手指点屏幕键盘；电脑端仍然只认物理键盘，防止用鼠标点键冒充打字
-- **手机 / iPad 线上版（2026-10-20，2026-10-24 修复分享码）**：WorkBuddy 发布，链接带分享码，不用开电脑；存档与本地版独立。**更新线上版的方法**：改完根目录源码 → 双击 `同步发布.cmd`（或跑 `sync-public.ps1`）→ 经发布工具重新上线。脚本会自动把 4 个源码文件拷进 `public/`（托管目录就是它）并给站内 URL 拼上分享码——**只动 `public/`，根目录源码保持干净**，本地 file:// 直开和 start.bat 试玩不受影响。分享码机制：内置托管按请求校验 `?sharecode=DNW4DOVJUL`，浏览器加载页面时相对路径引用（`style.css` 等）不带码会被 403 拦死导致页面裸奔，所以在发布副本里注入（2026-10-24 修复，此前能用纯属网关缓存运气）
-- **移动端音频预热（2026-10-20）**：首次点屏幕就解锁 AudioContext 与语音通道，修掉 iOS「完全没声音」
-- 待办：无（一期到三期规划内容已全部交付）
-
-## 技术栈
-
-原生 HTML/CSS/JS + Web Speech API（发音）+ Web Audio API（合成音效）+ localStorage（进度）。电脑上只认物理键盘（不做鼠标点虚拟键盘的假练习）；有触摸屏的设备（iPad / 平板）额外开放手指点键作答。
+[MIT](LICENSE)
